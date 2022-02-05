@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>فهرست سینماها</title>
+</head>
+<body>
+<h1>
+    سامانه فروش بلیت  سینما
+</h1>
+<h2>فهرست سالن سینما</h2>
+<a href="{% url "ticketing:movie_list" %}">
+    فهرست فیلم ها
+</a>
+
+   {% if cinamas %}
+
+       <ul>
+       {%  for cinemas in movie_list %}
+          <li> {{ cinemas }}</li>
+       {% endfor %}
+       </ul>
+      سینمایی وجود نیست
+    {% endif %}
+
+
+</body>
+</html>
