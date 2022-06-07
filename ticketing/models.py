@@ -16,6 +16,7 @@ class Movie(models.Model):
     year = models.IntegerField('سال تولید')
     length = models.IntegerField('زمان فیلم')
     description = models.TextField('توضیحات')
+    poster = models.ImageField('پوستر', upload_to='movie_posters/')
 
     def __str__(self):
         return self.name
@@ -36,6 +37,7 @@ class Cinema(models.Model):
     capacity = models.IntegerField('گنجایش')
     phone = models.CharField('تلفن', max_length=20, null=True)
     address = models.TextField('آدرس')
+    image = models.ImageField('تصویر', upload_to='cinema_images/', null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -81,3 +83,40 @@ class ShowTime(models.Model):
 
     def __str__(self):
         return '{} - {} - {}'.format(self.movie, self.cinema, self.start_time)
+
+    def get_price_display(self):
+        return '{} تومان'.format(self.price)
+
+    def is_full(self):
+        return self.free_eats == 0
+
+    def reserve_seats(self, seat_count):
+        """
+        Reserves one or more seats for a customer
+        :param seat_count: An integer as the number of seats to be reserved
+        """
+        assert isinstance(seat_count, int) and seat_count > 0, 'Number of seats should be a positive integer'
+        assert self.status == ShowTime.SALE_OPEN, 'Sale is not open'
+        assert self.free_eats >= seat_count, 'Not enough free seats'
+        self.free_eats -= seat_count
+        if self.free_eats == 0:
+            self.status = ShowTime.TICKETS_SOLD
+        self.save()
+
+
+class Ticket(models.Model):
+    """
+    Represents one or more tickets, bought by a user in an order
+    """
+
+    class Meta:
+        verbose_name = 'بلیت'
+        verbose_name_plural = 'بلیت'
+
+    showtime = models.ForeignKey('ShowTime', on_delete=models.PROTECT, verbose_name='سانس')
+    customer = models.ForeignKey('accounts.Profile', on_delete=models.PROTECT, verbose_name='خریدار')
+    seat_count = models.IntegerField('تعداد صندلی')
+    order_time = models.DateTimeField('زمان خرید', auto_now_add=True)
+
+    def __str__(self):
+        return "{} بلیت به نام {} برای فیلم {}".format(self.seat_count, self.customer, self.showtime.movie)
